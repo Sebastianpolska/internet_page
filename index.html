@@ -450,7 +450,8 @@
     let authToken = localStorage.getItem('authToken');
 
     // Sprawdź czy użytkownik jest zalogowany przy ładowaniu strony
-    if (authToken) {
+    // (tylko jeśli mamy token i jesteśmy na URL workera, nie lokalnie)
+    if (authToken && window.location.hostname !== 'localhost' && !window.location.protocol.startsWith('file:')) {
       checkAuth();
     }
 
