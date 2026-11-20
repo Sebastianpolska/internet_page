@@ -1,0 +1,8 @@
+name = "auth-worker"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "auth-db"
+database_id = "7d294d75-9d1e-42d3-b2dd-a7b5e141c6b5"
