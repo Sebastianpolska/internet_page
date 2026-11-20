@@ -14,6 +14,14 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // Serwuj index.html dla głównej ścieżki
+    if (path === '/' || path === '/index.html') {
+      const html = await env.ASSETS.fetch(request);
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    }
+
     if (path === '/api/register' && request.method === 'POST') {
       return await handleRegister(request, env);
     } else if (path === '/api/login' && request.method === 'POST') {
