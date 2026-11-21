@@ -287,6 +287,9 @@
                   Zaloguj się
                 </button>
               </form>
+              <button id="auth-toggle-btn" onclick="toggleAuthPanel()" class="mt-4 text-sm text-gray-400 hover:text-white transition-colors">
+                Przejdź do rejestracji
+              </button>
             </div>
 
             <!-- Signup Form -->
@@ -519,8 +522,11 @@
       if (logParam === 'ARTOR') {
         // Pokaż panel rejestracji
         showSignup();
-        // Usuń parametr z URL bez przeładowania
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Ukryj przycisk przełączania
+        const toggleBtn = document.getElementById('auth-toggle-btn');
+        if (toggleBtn) {
+          toggleBtn.classList.add('hidden');
+        }
       }
     }
 
