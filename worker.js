@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+// Kód administratora (w produkcji przechowuj w środowisku)
+const ADMIN_CODE = 'ADMIN123';
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
@@ -38,7 +41,7 @@ export default {
 
 async function handleRegister(request, env) {
   try {
-    const { email, password, name } = await request.json();
+    const { email, password, name, adminCode } = await request.json();
 
     // Sprawdź czy email już istnieje
     const existingUser = await env.DB.prepare(
@@ -52,13 +55,19 @@ async function handleRegister(request, env) {
       });
     }
 
-    // Hash hasła (prosta implementacja - w produkcji użyj bcrypt)
+    // Sprawdź kod administratora
+    let isAdmin = 0;
+    if (adminCode && adminCode === ADMIN_CODE) {
+      isAdmin = 1;
+    }
+
+    // Hash hasła
     const hashedPassword = await hashPassword(password);
 
     // Dodaj użytkownika
     const result = await env.DB.prepare(
-      'INSERT INTO users (email, password, name) VALUES (?, ?, ?)'
-    ).bind(email, hashedPassword, name).run();
+      'INSERT INTO users (email, password, name, admin_code, is_admin) VALUES (?, ?, ?, ?, ?)'
+    ).bind(email, hashedPassword, name, adminCode || null, isAdmin).run();
 
     return new Response(JSON.stringify({ success: true, userId: result.meta.last_row_id }), {
       status: 201,
@@ -178,6 +187,54 @@ async function handleLogout(request, env) {
   }
 }
 
+async function handleGoogleLogin(request, env) {
+  try {
+    const { googleToken } = await request.json();
+
+    // W prawdziwej implementacji tutaj weryfikujemy token Google
+    // Dla demonstracji tworzymy konto bez weryfikacji
+    // W produkcji użyj Firebase Auth lub Google Identity Services
+
+    // Symulacja - w prawdziwej implementacji sprawdź token z Google
+    const email = 'user@gmail.com'; // Pobierz z weryfikacji tokena Google
+    const name = 'Google User';
+
+    // Sprawdź czy użytkownik już istnieje
+    let user = await env.DB.prepare(
+      'SELECT * FROM users WHERE email = ?'
+    ).bind(email).first();
+
+    if (!user) {
+      // Utwórz nowe konto
+      const result = await env.DB.prepare(
+        'INSERT INTO users (email, password, name) VALUES (?, ?, ?)'
+      ).bind(email, '', name).run();
+      user = { id: result.meta.last_row_id, email, name };
+    }
+
+    // Generuj token sesji
+    const token = await generateToken();
+
+    await env.DB.prepare(
+      'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)'
+    ).bind(user.id, token, Date.now() + 7 * 24 * 60 * 60 * 1000).run();
+
+    return new Response(JSON.stringify({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, name: user.name }
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 // Prosta funkcja hashowania (w produkcji użyj Web Crypto API lub bcrypt)
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -196,4 +253,8 @@ async function generateToken() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
