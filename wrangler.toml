@@ -1,4 +1,4 @@
-name = "auth-worker"
+name = "info"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
@@ -12,5 +12,4 @@ database_name = "auth-db"
 database_id = "7d294d75-9d1e-42d3-b2dd-a7b5e141c6b5"
 
 [vars]
-GOOGLE_CLIENT_ID = "twoj-google-client-id"
-ADMIN_EMAILS = "admin@example.com,sebastian@example.com"
+ADMIN_CODE = "ADMIN123"
